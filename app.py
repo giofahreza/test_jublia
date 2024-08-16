@@ -45,7 +45,15 @@ def save_emails():
     if send_immediately:
         schedule_time = datetime.now().strftime('%d %b %Y %H.%M')
     else:
-        schedule_time = datetime.strptime(data.get('timestamp'), '%d %b %Y %H.%M').strftime('%d %b %Y %H.%M')
+        # Ensure the timestamp is provided and properly formatted
+        timestamp = data.get('timestamp')
+        if not timestamp:
+            return jsonify({'error': 'Timestamp is required if not sending immediately.'}), 400
+        
+        try:
+            schedule_time = datetime.strptime(timestamp, '%d %b %Y %H.%M').strftime('%d %b %Y %H.%M')
+        except ValueError:
+            return jsonify({'error': 'Invalid timestamp format. Please use "dd MMM yyyy HH.mm".'}), 400
 
     email = Email(event_id=event_id, recipients=recipients, subject=email_subject, content=email_content, schedule_time=schedule_time)
     db.session.add(email)
